@@ -1,6 +1,7 @@
 // Import functions from Firebase SDK
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
 
 // Define your Firebase configuration
 export abstract class FirebaseConfig {
@@ -19,3 +20,5 @@ export const firebaseApp = initializeApp(FirebaseConfig.webFirebaseConfig);
 
 // Get Firebase Authentication instance
 export const auth = getAuth(firebaseApp);
+
+export const db = getFirestore(firebaseApp);
