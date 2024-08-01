@@ -1,55 +1,44 @@
-import React, { useEffect, useState } from 'react';
+// src/screens/AuthScreen.tsx
+import React, { useState } from 'react';
 import './AuthScreen.css';
-import { createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
-import { auth } from '../config/firebase-config';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { auth } from './../config/firebase-config.ts';
 import { useNavigate } from 'react-router-dom';
 
 const AuthScreen: React.FC = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [isLogin, setIsLogin] = useState(true);
     const navigate = useNavigate();
     const provider = new GoogleAuthProvider();
 
-    const handleEmailPasswordSubmit = (event: React.FormEvent) => {
+    const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
-        createUserWithEmailAndPassword(auth, email, password)
-            .then((userCredential) => {
-                const user = userCredential.user;
-                console.log(user);
-                setIsAuthenticated(true);
-            })
-            .catch((error) => {
-                const errorCode = error.code;
-                const errorMessage = error.message;
-                console.error(errorCode, errorMessage);
-            });
-    };
-
-    const handleGoogleSignIn = () => {
-        signInWithPopup(auth, provider)
-            .then((result) => {
-                const user = result.user;
-                console.log(user);
-                setIsAuthenticated(true);
-            })
-            .catch((error) => {
-                const errorCode = error.code;
-                const errorMessage = error.message;
-                console.error(errorCode, errorMessage);
-            });
-    };
-
-    useEffect(() => {
-        if (isAuthenticated) {
-            navigate('/firestore');
+        try {
+            if (isLogin) {
+                await signInWithEmailAndPassword(auth, email, password);
+            } else {
+                await createUserWithEmailAndPassword(auth, email, password);
+            }
+            navigate('/dashboard');
+        } catch (error) {
+            console.error('Authentication Error:', error);
         }
-    }, [isAuthenticated, navigate]);
+    };
+
+    const handleGoogleSignIn = async () => {
+        try {
+            await signInWithPopup(auth, provider);
+            navigate('/dashboard');
+        } catch (error) {
+            console.error('Google Sign-In Error:', error);
+        }
+    };
 
     return (
         <div className="auth-screen">
-            <h1>Authentication</h1>
-            <form onSubmit={handleEmailPasswordSubmit} className="auth-form">
+            <h1>{isLogin ? 'Login' : 'Register'}</h1>
+            <form onSubmit={handleSubmit} className="auth-form">
                 <div className="form-group">
                     <label htmlFor="email">Email:</label>
                     <input
@@ -70,13 +59,14 @@ const AuthScreen: React.FC = () => {
                         required
                     />
                 </div>
-                <button type="submit">Sign Up</button>
+                <button type="submit">{isLogin ? 'Login' : 'Register'}</button>
             </form>
-            <button onClick={handleGoogleSignIn} className="google-sign-in-button">
-                Sign In with Google
+            <button onClick={handleGoogleSignIn}>Sign in with Google</button>
+            <button onClick={() => setIsLogin(!isLogin)}>
+                {isLogin ? 'Switch to Register' : 'Switch to Login'}
             </button>
         </div>
     );
-}
+};
 
 export default AuthScreen;
