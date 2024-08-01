@@ -1,18 +1,23 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import './AuthScreen.css';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import {auth} from "../config/firebase-config.ts";
+import { createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { auth } from '../config/firebase-config';
+import { useNavigate } from 'react-router-dom';
 
 const AuthScreen: React.FC = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const navigate = useNavigate();
+    const provider = new GoogleAuthProvider();
 
-    const handleSubmit = (event: React.FormEvent) => {
+    const handleEmailPasswordSubmit = (event: React.FormEvent) => {
         event.preventDefault();
-        createUserWithEmailAndPassword(auth,email,password)
+        createUserWithEmailAndPassword(auth, email, password)
             .then((userCredential) => {
                 const user = userCredential.user;
                 console.log(user);
+                setIsAuthenticated(true);
             })
             .catch((error) => {
                 const errorCode = error.code;
@@ -21,10 +26,30 @@ const AuthScreen: React.FC = () => {
             });
     };
 
+    const handleGoogleSignIn = () => {
+        signInWithPopup(auth, provider)
+            .then((result) => {
+                const user = result.user;
+                console.log(user);
+                setIsAuthenticated(true);
+            })
+            .catch((error) => {
+                const errorCode = error.code;
+                const errorMessage = error.message;
+                console.error(errorCode, errorMessage);
+            });
+    };
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            navigate('/firestore');
+        }
+    }, [isAuthenticated, navigate]);
+
     return (
         <div className="auth-screen">
             <h1>Authentication</h1>
-            <form onSubmit={handleSubmit} className="auth-form">
+            <form onSubmit={handleEmailPasswordSubmit} className="auth-form">
                 <div className="form-group">
                     <label htmlFor="email">Email:</label>
                     <input
@@ -45,8 +70,11 @@ const AuthScreen: React.FC = () => {
                         required
                     />
                 </div>
-                <button type="submit">Login</button>
+                <button type="submit">Sign Up</button>
             </form>
+            <button onClick={handleGoogleSignIn} className="google-sign-in-button">
+                Sign In with Google
+            </button>
         </div>
     );
 }
