@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import './AuthScreen.css';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import {auth} from "../config/firebase-config.ts";
 
 const AuthScreen: React.FC = () => {
     const [email, setEmail] = useState('');
@@ -7,9 +9,16 @@ const AuthScreen: React.FC = () => {
 
     const handleSubmit = (event: React.FormEvent) => {
         event.preventDefault();
-        // Handle authentication logic here
-        console.log('Email:', email);
-        console.log('Password:', password);
+        createUserWithEmailAndPassword(auth,email,password)
+            .then((userCredential) => {
+                const user = userCredential.user;
+                console.log(user);
+            })
+            .catch((error) => {
+                const errorCode = error.code;
+                const errorMessage = error.message;
+                console.error(errorCode, errorMessage);
+            });
     };
 
     return (
